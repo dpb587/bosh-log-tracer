@@ -276,11 +276,11 @@ func (l *Observer) startPackageCompilation(msg taskdebug.RawMessage) error {
 		opentracing.Tag{Key: "stemcell_os", Value: msg.Tags["stemcell_os"]},
 		opentracing.Tag{Key: "stemcell_version", Value: msg.Tags["stemcell_version"]},
 	)
-	sp.LogFields(
-		opentracinglog.String("type", "start"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "start"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 
 	ctx := l.ctx.Open(
 		context.Annotation{Key: "compilation.package", Value: msg.Tags["package"]},
@@ -399,11 +399,11 @@ func (l *Observer) startEmulatedStage(msg taskdebug.RawMessage, stage string) er
 		opentracing.ChildOf(l.rootSpan.Context()),
 		opentracing.StartTime(msg.LogTime),
 	)
-	sp.LogFields(
-		opentracinglog.String("type", "start"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "start"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 
 	ctx := l.ctx.Open(context.Annotation{Key: "emulated_stage", Value: stage})
 	ctx.Set("tracing.span", sp)
@@ -423,11 +423,11 @@ func (l *Observer) endEmulatedStage(msg taskdebug.RawMessage) error {
 	}
 
 	sp := spU.(opentracing.Span)
-	sp.LogFields(
-		opentracinglog.String("type", "start"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "start"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 	sp.FinishWithOptions(
 		opentracing.FinishOptions{FinishTime: msg.LogTime},
 	)
@@ -447,11 +447,11 @@ func (l *Observer) process(msg taskdebug.ProcessMessage) error {
 		opentracing.Tag{Key: "director.instance.id", Value: msg.InstanceID},
 		opentracing.Tag{Key: "host.ip", Value: msg.IP},
 	)
-	sp.LogFields(
-		opentracinglog.String("type", "start"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "start"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 
 	l.rootSpan = sp
 
@@ -486,17 +486,17 @@ func (l *Observer) sequel(msg taskdebug.SequelMessage) error {
 		opentracing.ChildOf(l.findParentSpan(l.getDefaultAnnotations(msg.RawMessage)...).Context()),
 		opentracing.StartTime(msg.LogTime.Add(-1*msg.Duration)),
 	)
-	sp.LogFields(
-		opentracinglog.String("type", "start"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "start"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 
-	sp.LogFields(
-		opentracinglog.String("type", "finish"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "finish"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 	sp.FinishWithOptions(
 		opentracing.FinishOptions{FinishTime: msg.LogTime},
 	)
@@ -512,18 +512,18 @@ func (l *Observer) natsSentHM(msg taskdebug.NATSMessageMessage) error {
 		opentracing.StartTime(msg.LogTime),
 		opentracing.ChildOf(parentSpan.Context()),
 	)
-	sp.LogFields(
-		opentracinglog.String("type", "start"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "start"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 
 	// no response expected, so finish immediately
-	sp.LogFields(
-		opentracinglog.String("type", "finish"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "finish"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 	sp.FinishWithOptions(
 		opentracing.FinishOptions{FinishTime: msg.LogTime},
 	)
@@ -561,11 +561,11 @@ func (l *Observer) natsSentAgent(msg taskdebug.NATSMessageSentAgentMessage) erro
 				opentracing.StartTime(msg.LogTime),
 				opentracing.ChildOf(parentSpan.Context()),
 			)
-			sp.LogFields(
-				opentracinglog.String("type", "start"),
-				opentracinglog.Int64("line", msg.LineOffset()),
-				opentracinglog.String("msg", msg.LineData()),
-			)
+			// sp.LogFields(
+			// 	opentracinglog.String("type", "start"),
+			// 	opentracinglog.Int64("line", msg.LineOffset()),
+			// 	opentracinglog.String("msg", msg.LineData()),
+			// )
 
 			ctx.Set("tracing.span", sp)
 			ctx.Set("nats.sent", msg)
@@ -588,11 +588,11 @@ func (l *Observer) natsSentAgent(msg taskdebug.NATSMessageSentAgentMessage) erro
 			opentracing.StartTime(msg.LogTime),
 			opentracing.ChildOf(parentSpan.Context()),
 		)
-		sp.LogFields(
-			opentracinglog.String("type", "start"),
-			opentracinglog.Int64("line", msg.LineOffset()),
-			opentracinglog.String("msg", msg.LineData()),
-		)
+		// sp.LogFields(
+		// 	opentracinglog.String("type", "start"),
+		// 	opentracinglog.Int64("line", msg.LineOffset()),
+		// 	opentracinglog.String("msg", msg.LineData()),
+		// )
 
 		ctx := l.ctx.Open(
 			context.Annotation{Key: "agent.id", Value: strings.TrimPrefix(msg.Channel, "agent.")},
@@ -610,11 +610,11 @@ func (l *Observer) natsSentAgent(msg taskdebug.NATSMessageSentAgentMessage) erro
 		opentracing.StartTime(msg.LogTime),
 		opentracing.ChildOf(parentSpan.Context()),
 	)
-	sp.LogFields(
-		opentracinglog.String("type", "start"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "start"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 
 	ctx := l.ctx.Open(context.Annotation{Key: "nats.reply_to", Value: msg.PayloadReplyTo})
 	ctx.Set("tracing.span", sp)
@@ -631,11 +631,11 @@ func (l *Observer) natsReceived(msg taskdebug.NATSMessageMessage) error {
 	}
 
 	sp := spU.(opentracing.Span)
-	sp.LogFields(
-		opentracinglog.String("type", "finish"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "finish"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 	sp.FinishWithOptions(opentracing.FinishOptions{FinishTime: msg.LogTime})
 
 	sentMsgU, ok := scope.Get("nats.sent")
@@ -669,11 +669,11 @@ func (l *Observer) natsReceived(msg taskdebug.NATSMessageMessage) error {
 			}
 
 			sp := spU.(opentracing.Span)
-			sp.LogFields(
-				opentracinglog.String("type", "finish"),
-				opentracinglog.Int64("line", msg.LineOffset()),
-				opentracinglog.String("msg", msg.LineData()),
-			)
+			// sp.LogFields(
+			// 	opentracinglog.String("type", "finish"),
+			// 	opentracinglog.Int64("line", msg.LineOffset()),
+			// 	opentracinglog.String("msg", msg.LineData()),
+			// )
 			sp.FinishWithOptions(opentracing.FinishOptions{FinishTime: msg.LogTime})
 
 			{ // cheat and assume this is the last step of updating an instance
@@ -706,11 +706,11 @@ func (l *Observer) externalCPIRequest(msg taskdebug.ExternalCPIRequestMessage) e
 		opentracing.StartTime(msg.LogTime),
 		opentracing.ChildOf(l.findParentSpan(l.getDefaultAnnotations(msg.RawMessage)...).Context()),
 	)
-	sp.LogFields(
-		opentracinglog.String("type", "start"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "start"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 
 	ctx := l.ctx.Open(context.Annotation{Key: "external_cpi.correlation", Value: msg.Correlation})
 	ctx.Set("tracing.span", sp)
@@ -726,10 +726,11 @@ func (l *Observer) externalCPIResponse(msg taskdebug.ExternalCPIMessage) error {
 	}
 
 	sp := spU.(opentracing.Span)
-	sp.LogFields(
-		opentracinglog.String("type", "finish"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()))
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "finish"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 	sp.FinishWithOptions(opentracing.FinishOptions{FinishTime: msg.LogTime})
 
 	return nil
@@ -741,11 +742,11 @@ func (l *Observer) cpiAWSRPC(msg taskdebug.CPIAWSRPCMessage) error {
 		opentracing.StartTime(msg.LogTime.Add(-1*msg.Duration)),
 		opentracing.ChildOf(l.findParentSpan(context.Annotations{{Key: "external_cpi.correlation", Value: msg.Correlation}}).Context()),
 	)
-	sp.LogFields(
-		opentracinglog.String("type", "finish"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	// sp.LogFields(
+	// 	opentracinglog.String("type", "finish"),
+	// 	opentracinglog.Int64("line", msg.LineOffset()),
+	// 	opentracinglog.String("msg", msg.LineData()),
+	// )
 	sp.FinishWithOptions(opentracing.FinishOptions{FinishTime: msg.LogTime})
 
 	return nil
@@ -765,11 +766,11 @@ func (l *Observer) lock(msg taskdebug.LockMessage) error {
 			opentracing.StartTime(msg.LogTime),
 			opentracing.ChildOf(l.findParentSpan(l.getDefaultAnnotations(msg.RawMessage)...).Context()),
 		)
-		sp.LogFields(
-			opentracinglog.String("type", "start"),
-			opentracinglog.Int64("line", msg.LineOffset()),
-			opentracinglog.String("msg", msg.LineData()),
-		)
+		// sp.LogFields(
+		// 	opentracinglog.String("type", "start"),
+		// 	opentracinglog.Int64("line", msg.LineOffset()),
+		// 	opentracinglog.String("msg", msg.LineData()),
+		// )
 
 		ctx := l.ctx.Open(context.Annotation{Key: "lock.name", Value: msg.Name})
 		ctx.Set("tracing.span", sp)
@@ -782,11 +783,11 @@ func (l *Observer) lock(msg taskdebug.LockMessage) error {
 			opentracing.StartTime(msg.LogTime),
 			opentracing.ChildOf(l.findParentSpan(context.Annotations{{Key: "lock.name", Value: msg.Name}}).Context()),
 		)
-		sp.LogFields(
-			opentracinglog.String("type", "finish"),
-			opentracinglog.Int64("line", msg.LineOffset()),
-			opentracinglog.String("msg", msg.LineData()),
-		)
+		// sp.LogFields(
+		// 	opentracinglog.String("type", "finish"),
+		// 	opentracinglog.Int64("line", msg.LineOffset()),
+		// 	opentracinglog.String("msg", msg.LineData()),
+		// )
 		sp.FinishWithOptions(opentracing.FinishOptions{FinishTime: msg.LogTime})
 	} else if msg.Event == "Deleted" {
 		scope := l.ctx.Open(context.Annotation{Key: "lock.name", Value: msg.Name})
@@ -803,11 +804,11 @@ func (l *Observer) lock(msg taskdebug.LockMessage) error {
 			opentracing.StartTime(msg.LogTime),
 			opentracing.ChildOf(parentSpan.Context()),
 		)
-		sp.LogFields(
-			opentracinglog.String("type", "finish"),
-			opentracinglog.Int64("line", msg.LineOffset()),
-			opentracinglog.String("msg", msg.LineData()),
-		)
+		// sp.LogFields(
+		// 	opentracinglog.String("type", "finish"),
+		// 	opentracinglog.Int64("line", msg.LineOffset()),
+		// 	opentracinglog.String("msg", msg.LineData()),
+		// )
 		sp.FinishWithOptions(opentracing.FinishOptions{FinishTime: msg.LogTime})
 
 		parentSpan.LogFields(
