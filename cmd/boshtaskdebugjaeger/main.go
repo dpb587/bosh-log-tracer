@@ -16,7 +16,9 @@ func main() {
 	ctx := &context.Context{}
 	parsers := taskdebug.Parser
 
-	observer := jaeger.NewObserver(ctx)
+	observer := jaeger.NewObserver(ctx, jaeger.ObserverOptions{
+		IncludeLogReferences: false,
+	})
 	observer.Begin()
 	defer observer.Commit()
 
@@ -32,8 +34,6 @@ func main() {
 		}
 
 		for _, p := range parsers {
-			// fmt.Printf("IN: %#+v\n", l)
-			// fmt.Printf("TO: %#+v\n", p)
 			l, err = p.Parse(l)
 			if err != nil {
 				panic(err)
