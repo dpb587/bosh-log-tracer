@@ -7,6 +7,8 @@ var Parser = []log.LineParser{
 
 	ProcessParser,
 	SequelParser,
+	LockParser,
+	InstanceAspectChangedParser,
 
 	NATSMessageSentAgentParser,
 	NATSMessageParser,
@@ -15,6 +17,4 @@ var Parser = []log.LineParser{
 	ExternalCPIParser,
 
 	CPIAWSRPCParser,
-
-	LockParser,
 }

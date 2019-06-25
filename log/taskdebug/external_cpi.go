@@ -15,11 +15,11 @@ type ExternalCPIMessage struct {
 
 	Correlation string
 	Event       string
-	Payload     string
+	Remaining   string
 }
 
 // [external-cpi] [cpi-308955] request: {"method":"create_vm","arguments":[...
-var externalCPIOneRE = regexp.MustCompile(`^\[external-cpi\] \[(cpi-\d+)\] (request|response): (.+)(\s+with command:|, err:)\s.+$`)
+var externalCPIOneRE = regexp.MustCompile(`^\[external-cpi\] \[(cpi-\d+)\] (request|response): (.+)$`)
 
 func (p externalCPIParser) Parse(inU log.Line) (log.Line, error) {
 	in, ok := inU.(RawMessage)
@@ -36,7 +36,7 @@ func (p externalCPIParser) Parse(inU log.Line) (log.Line, error) {
 			RawMessage:  in,
 			Correlation: m[1],
 			Event:       m[2],
-			Payload:     m[3],
+			Remaining:   m[3],
 		}
 
 		return out, nil

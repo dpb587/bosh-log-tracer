@@ -18,3 +18,13 @@ func (s *Scope) Get(k string) (interface{}, bool) {
 
 	return v, ok
 }
+
+func (s *Scope) Keys() []string {
+	var res []string
+
+	for k, _ := range s.kv {
+		res = append(res, k)
+	}
+
+	return res
+}

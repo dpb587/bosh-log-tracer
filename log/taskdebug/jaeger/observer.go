@@ -3,6 +3,7 @@ package jaeger
 import (
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/dpb587/boshdebugtracer/log"
@@ -173,6 +174,9 @@ func (l *Observer) Handle(msg log.Line) error {
 	case taskdebug.LockMessage:
 		return l.lock(m)
 
+	case taskdebug.InstanceAspectChangedMessage:
+		return l.instanceAspectChanged(m)
+
 	case taskdebug.RawMessage:
 		if m.Message == "Creating job" {
 			return l.creatingJob(m)
@@ -198,6 +202,20 @@ func (l *Observer) Handle(msg log.Line) error {
 			return l.startUpdateInstance(m)
 		}
 	}
+
+	return nil
+}
+
+func (l *Observer) instanceAspectChanged(msg taskdebug.InstanceAspectChangedMessage) error {
+	ctx := l.ctx.Open(
+		context.Annotation{Key: "aggregation", Value: "instance_aspect_changed"},
+		context.Annotation{Key: "instance_group", Value: msg.InstanceGroup},
+		context.Annotation{Key: "instance_id", Value: msg.InstanceID},
+	)
+
+	// should only ever be one per aspect
+	// weirdly, seems like stemcell_changed? can appear multiple times
+	ctx.Set(msg.Aspect, msg)
 
 	return nil
 }
@@ -240,6 +258,40 @@ func (l *Observer) startUpdateInstance(msg taskdebug.RawMessage) error {
 			opentracing.Tag{Key: "instance_id", Value: msg.Tags["instance_id"]},
 		)
 
+		l.addSpanLogReference(sp, "start", msg)
+
+		aspectsCtx := l.ctx.Open(
+			context.Annotation{Key: "aggregation", Value: "instance_aspect_changed"},
+			context.Annotation{Key: "instance_group", Value: msg.Tags["instance_group"]},
+			context.Annotation{Key: "instance_id", Value: msg.Tags["instance_id"]},
+		)
+
+		aspectChanges := aspectsCtx.Keys()
+		sort.Strings(aspectChanges)
+
+		for _, k := range aspectChanges {
+			msgAspectU, _ := aspectsCtx.Get(k)
+			msgAspect := msgAspectU.(taskdebug.InstanceAspectChangedMessage)
+
+			for k, v := range msgAspect.GetChangedFromTags() {
+				sp.SetTag(strings.TrimSuffix(fmt.Sprintf("updater.change.%s.old.%s", msgAspect.Aspect, k), "."), v)
+			}
+
+			for k, v := range msgAspect.GetChangedToTags() {
+				sp.SetTag(strings.TrimSuffix(fmt.Sprintf("updater.change.%s.new.%s", msgAspect.Aspect, k), "."), v)
+			}
+
+			if msgAspect.Aspect == "packages" {
+				sp.SetTag("updater.change.packages", msgAspect.GetChangedPackages())
+			}
+
+			l.addSpanLogReference(sp, "changed", msgAspect)
+		}
+
+		if len(aspectChanges) > 0 {
+			sp.SetTag("updater.changes", aspectChanges)
+		}
+
 		ctx.Set("tracing.span", sp)
 	} else {
 		sp = spU.(opentracing.Span)
@@ -261,7 +313,9 @@ func (l *Observer) finishUpdateInstance(start taskdebug.NATSMessageSentAgentMess
 		panic("logical inconsistency: expected instance start span")
 	}
 
-	spU.(opentracing.Span).FinishWithOptions(opentracing.FinishOptions{FinishTime: end.LogTime})
+	sp := spU.(opentracing.Span)
+	sp.FinishWithOptions(opentracing.FinishOptions{FinishTime: end.LogTime})
+	l.addSpanLogReference(sp, "finish", end)
 
 	ctx = l.ctx.Open(
 		context.Annotation{Key: "updater", Value: "instance_group"},
@@ -306,11 +360,7 @@ func (l *Observer) finishPackageCompilation(msg taskdebug.RawMessage) error {
 	}
 
 	sp := spU.(opentracing.Span)
-	sp.LogFields(
-		opentracinglog.String("type", "finish"),
-		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
-	)
+	l.addSpanLogReference(sp, "finish", msg)
 	sp.FinishWithOptions(
 		opentracing.FinishOptions{FinishTime: msg.LogTime},
 	)
@@ -536,6 +586,8 @@ func (l *Observer) natsSentAgent(msg taskdebug.NATSMessageSentAgentMessage) erro
 				fmt.Sprintf("agent: %s", msg.PayloadMethod),
 				opentracing.StartTime(msg.LogTime),
 				opentracing.ChildOf(parentSpan.Context()),
+				opentracing.Tag{Key: "nats.agent.agent_id", Value: msg.AgentID},
+				opentracing.Tag{Key: "nats.agent.method", Value: msg.PayloadMethod},
 			)
 			l.addSpanLogReference(sp, "start", msg)
 
@@ -559,11 +611,13 @@ func (l *Observer) natsSentAgent(msg taskdebug.NATSMessageSentAgentMessage) erro
 			fmt.Sprintf("agent: %s", operation),
 			opentracing.StartTime(msg.LogTime),
 			opentracing.ChildOf(parentSpan.Context()),
+			opentracing.Tag{Key: "nats.agent.agent_id", Value: msg.AgentID},
+			opentracing.Tag{Key: "nats.agent.method", Value: msg.PayloadMethod},
 		)
 		l.addSpanLogReference(sp, "start", msg)
 
 		ctx := l.ctx.Open(
-			context.Annotation{Key: "agent.id", Value: strings.TrimPrefix(msg.Channel, "agent.")},
+			context.Annotation{Key: "agent.id", Value: msg.AgentID},
 			context.Annotation{Key: "agent.method", Value: msg.PayloadMethod},
 			context.Annotation{Key: "agent.pending_task_id", Value: msg.PayloadReplyTo},
 		)
@@ -577,6 +631,8 @@ func (l *Observer) natsSentAgent(msg taskdebug.NATSMessageSentAgentMessage) erro
 		fmt.Sprintf("agent: %s", msg.PayloadMethod),
 		opentracing.StartTime(msg.LogTime),
 		opentracing.ChildOf(parentSpan.Context()),
+		opentracing.Tag{Key: "nats.agent.agent_id", Value: msg.AgentID},
+		opentracing.Tag{Key: "nats.agent.method", Value: msg.PayloadMethod},
 	)
 	l.addSpanLogReference(sp, "start", msg)
 
@@ -651,6 +707,13 @@ func (l *Observer) natsReceived(msg taskdebug.NATSMessageMessage) error {
 		// it should have come back with a task id that we want to annotate for subsequent calls
 		scope := l.ctx.Open(context.Annotation{Key: "agent.pending_task_id", Value: msg.Channel})
 		scope.AddAnnotation(context.Annotation{Key: "agent.task_id", Value: msg.GetReceivedTaskID()})
+
+		spU, ok := scope.Get("tracing.span")
+		if !ok {
+			panic("logical inconsistency: expected wrapping task span")
+		}
+
+		spU.(opentracing.Span).SetTag("nats.agent.task_id", msg.GetReceivedTaskID())
 	}
 
 	return nil
@@ -661,6 +724,8 @@ func (l *Observer) externalCPIRequest(msg taskdebug.ExternalCPIRequestMessage) e
 		msg.PayloadMethod,
 		opentracing.StartTime(msg.LogTime),
 		opentracing.ChildOf(l.findParentSpan(l.getDefaultAnnotations(msg.RawMessage)...).Context()),
+		opentracing.Tag{Key: "cpi.method", Value: msg.PayloadMethod},
+		opentracing.Tag{Key: "cpi.exec", Value: msg.Command},
 	)
 	l.addSpanLogReference(sp, "start", msg)
 
@@ -685,10 +750,13 @@ func (l *Observer) externalCPIResponse(msg taskdebug.ExternalCPIMessage) error {
 }
 
 func (l *Observer) cpiAWSRPC(msg taskdebug.CPIAWSRPCMessage) error {
-	sp := l.getTracer("iaas").StartSpan(
+	sp := l.getTracer("aws").StartSpan(
 		msg.PayloadMethod,
 		opentracing.StartTime(msg.LogTime.Add(-1*msg.Duration)),
 		opentracing.ChildOf(l.findParentSpan(context.Annotations{{Key: "external_cpi.correlation", Value: msg.Correlation}}).Context()),
+		opentracing.Tag{Key: "aws.method", Value: msg.PayloadMethod},
+		opentracing.Tag{Key: "http.status_code", Value: msg.StatusCode},
+		opentracing.Tag{Key: "aws.retries", Value: msg.Retries},
 	)
 	l.addSpanLogReference(sp, "finish", msg)
 	sp.FinishWithOptions(opentracing.FinishOptions{FinishTime: msg.LogTime})
@@ -758,8 +826,8 @@ func (l *Observer) addSpanLogReference(sp opentracing.Span, event string, msg lo
 	}
 
 	sp.LogFields(
-		opentracinglog.String("type", event),
+		opentracinglog.String("event", event),
 		opentracinglog.Int64("line", msg.LineOffset()),
-		opentracinglog.String("msg", msg.LineData()),
+		opentracinglog.String("message", msg.LineData()),
 	)
 }

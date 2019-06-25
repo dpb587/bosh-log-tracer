@@ -18,6 +18,8 @@ type CPIAWSRPCMessage struct {
 
 	Correlation   string
 	Duration      time.Duration
+	StatusCode    int
+	Retries       int
 	Payload       string
 	PayloadMethod string
 }
@@ -46,6 +48,14 @@ func (p cpiAWSRPCParser) Parse(inU log.Line) (log.Line, error) {
 
 		if res, err := strconv.ParseFloat(m[2], 64); err == nil {
 			out.Duration = time.Duration(int64(res * 1000000))
+		}
+
+		if res, err := strconv.Atoi(m[1]); err == nil {
+			out.StatusCode = res
+		}
+
+		if res, err := strconv.Atoi(m[3]); err == nil {
+			out.Retries = res
 		}
 
 		return out, nil

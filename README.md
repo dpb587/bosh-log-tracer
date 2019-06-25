@@ -11,7 +11,7 @@ alpha/experiment/buggy/use-at-your-own-risk
 
 Run [Jaeger](https://www.jaegertracing.io/) (the tooling and UI) locally according to their [Getting started](https://www.jaegertracing.io/docs/1.12/getting-started/) guide...
 
-    docker run -d --name jaeger  \
+    docker run -d --name jaeger \
       -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 \
       -p 5775:5775/udp \
       -p 6831:6831/udp \
@@ -22,7 +22,7 @@ Run [Jaeger](https://www.jaegertracing.io/) (the tooling and UI) locally accordi
       -p 9411:9411 \
       jaegertracing/all-in-one:1.12
 
-Pipe the deployment task...
+Provide the debug log of a deploy task via `STDIN`...
 
     bosh task --debug 1234 | go run ./cmd/boshtaskdebugjaeger
 

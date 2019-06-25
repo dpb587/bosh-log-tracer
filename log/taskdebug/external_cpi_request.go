@@ -2,6 +2,7 @@ package taskdebug
 
 import (
 	"encoding/json"
+	"regexp"
 
 	"github.com/dpb587/boshdebugtracer/log"
 )
@@ -13,8 +14,13 @@ type externalCPIRequestParser struct{}
 type ExternalCPIRequestMessage struct {
 	ExternalCPIMessage
 
+	Payload       string
 	PayloadMethod string
+	Command       string
 }
+
+// [external-cpi] [cpi-308955] request: {"method":"create_vm","arguments":[...
+var externalCPIRequestOneRE = regexp.MustCompile(`(\{.+\}) with command: (.+)$`)
 
 func (p externalCPIRequestParser) Parse(inU log.Line) (log.Line, error) {
 	inU, err := ExternalCPIParser.Parse(inU)
@@ -38,20 +44,26 @@ func (p externalCPIRequestParser) Parse(inU log.Line) (log.Line, error) {
 		return upstream, nil
 	}
 
-	out := ExternalCPIRequestMessage{
-		ExternalCPIMessage: upstream,
+	if m := externalCPIRequestOneRE.FindStringSubmatch(upstream.Remaining); len(m) > 0 {
+		out := ExternalCPIRequestMessage{
+			ExternalCPIMessage: upstream,
+			Payload: m[1],
+			Command:            m[2],
+		}
+
+		var payload struct {
+			Method string `json:"method"`
+		}
+
+		err = json.Unmarshal([]byte(out.Payload), &payload)
+		if err != nil {
+			panic(err)
+		}
+
+		out.PayloadMethod = payload.Method
+
+		return out, nil
 	}
 
-	var payload struct {
-		Method string `json:"method"`
-	}
-
-	err = json.Unmarshal([]byte(out.Payload), &payload)
-	if err != nil {
-		panic(err)
-	}
-
-	out.PayloadMethod = payload.Method
-
-	return out, nil
+	return upstreamU, nil
 }
