@@ -200,6 +200,11 @@ func (l *Observer) Handle(msg log.Line) error {
 			return l.finishPackageCompilation(m)
 		} else if strings.HasPrefix(m.Message, "Updating instance ") {
 			return l.startUpdateInstance(m)
+		} else if strings.HasPrefix(m.Message, "Creating missing VM") {
+			return l.startCreateInstance(m)
+		} else if strings.HasPrefix(m.Message, "Agenda step Bosh::Director::DeploymentPlan::Steps::RenderInstanceJobTemplatesStep finished") {
+			// TODO formal agenda step
+			return l.finishCreateInstance(m)
 		}
 	}
 
@@ -296,6 +301,70 @@ func (l *Observer) startUpdateInstance(msg taskdebug.RawMessage) error {
 	} else {
 		sp = spU.(opentracing.Span)
 	}
+
+	return nil
+}
+
+func (l *Observer) startCreateInstance(msg taskdebug.RawMessage) error {
+	var sp opentracing.Span
+
+	if l.emulatedStage != "updating" {
+		// don't do this for compilations/preparations
+		return nil
+	}
+
+	// if there's an updater scope, just use that
+	updaterCtx := l.ctx.Open(
+		context.Annotation{Key: "updater", Value: "instance_id"},
+		context.Annotation{Key: "updater.instance_group", Value: msg.Tags["instance_group"]},
+		context.Annotation{Key: "updater.instance_id", Value: msg.Tags["instance_id"]},
+	)
+	_, ok := updaterCtx.Get("tracing.span")
+	if ok {
+		return nil
+	}
+
+	ctx := l.ctx.Open(
+		context.Annotation{Key: "creator", Value: "instance_id"},
+		context.Annotation{Key: "creator.instance_group", Value: msg.Tags["instance_group"]},
+		context.Annotation{Key: "creator.instance_id", Value: msg.Tags["instance_id"]},
+	)
+	spU, ok := ctx.Get("tracing.span")
+	if !ok {
+		sp = l.getTracer("creator").StartSpan(
+			fmt.Sprintf("%s/%s", msg.Tags["instance_group"], msg.Tags["instance_id"]),
+			opentracing.StartTime(msg.LogTime),
+			opentracing.ChildOf(l.findParentSpan().Context()),
+			opentracing.Tag{Key: "instance_group", Value: msg.Tags["instance_group"]},
+			opentracing.Tag{Key: "instance_id", Value: msg.Tags["instance_id"]},
+		)
+
+		l.addSpanLogReference(sp, "start", msg)
+
+		ctx.Set("tracing.span", sp)
+	} else {
+		sp = spU.(opentracing.Span)
+	}
+
+	return nil
+}
+
+func (l *Observer) finishCreateInstance(msg taskdebug.RawMessage) error {
+	var sp opentracing.Span
+
+	ctx := l.ctx.Open(
+		context.Annotation{Key: "creator", Value: "instance_id"},
+		context.Annotation{Key: "creator.instance_group", Value: msg.Tags["instance_group"]},
+		context.Annotation{Key: "creator.instance_id", Value: msg.Tags["instance_id"]},
+	)
+	spU, ok := ctx.Get("tracing.span")
+	if !ok {
+		return nil
+	}
+
+	sp = spU.(opentracing.Span)
+	sp.FinishWithOptions(opentracing.FinishOptions{FinishTime: msg.LogTime})
+	l.addSpanLogReference(sp, "finish", msg)
 
 	return nil
 }
@@ -402,6 +471,15 @@ func (l *Observer) getDefaultAnnotations(msg taskdebug.RawMessage) []context.Ann
 						},
 					)
 				}
+
+				res = append(
+					res,
+					context.Annotations{
+						{Key: "creator", Value: "instance_id"},
+						{Key: "creator.instance_group", Value: ig},
+						{Key: "creator.instance_id", Value: igid},
+					},
+				)
 			}
 		}
 	}
