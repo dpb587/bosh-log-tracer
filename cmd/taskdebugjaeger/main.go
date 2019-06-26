@@ -4,17 +4,21 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/dpb587/boshdebugtracer/log"
-	"github.com/dpb587/boshdebugtracer/log/taskdebug"
-	"github.com/dpb587/boshdebugtracer/observer/debug"
+	"github.com/dpb587/bosh-log-tracer/log"
+	"github.com/dpb587/bosh-log-tracer/log/taskdebug"
+	"github.com/dpb587/bosh-log-tracer/log/taskdebug/jaeger"
+	"github.com/dpb587/bosh-log-tracer/observer/context"
 )
 
 func main() {
 	var err error
 
+	ctx := &context.Context{}
 	parsers := taskdebug.Parser
 
-	observer := debug.NewObserver()
+	observer := jaeger.NewObserver(ctx, jaeger.ObserverOptions{
+		IncludeLogReferences: true,
+	})
 	observer.Begin()
 	defer observer.Commit()
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dpb587/boshdebugtracer/log"
+	"github.com/dpb587/bosh-log-tracer/log"
 )
 
 var CPIAWSRPCParser = cpiAWSRPCParser{}

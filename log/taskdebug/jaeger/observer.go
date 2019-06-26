@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dpb587/boshdebugtracer/log"
-	"github.com/dpb587/boshdebugtracer/log/taskdebug"
-	"github.com/dpb587/boshdebugtracer/observer"
-	"github.com/dpb587/boshdebugtracer/observer/context"
+	"github.com/dpb587/bosh-log-tracer/log"
+	"github.com/dpb587/bosh-log-tracer/log/taskdebug"
+	"github.com/dpb587/bosh-log-tracer/observer"
+	"github.com/dpb587/bosh-log-tracer/observer/context"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	opentracinglog "github.com/opentracing/opentracing-go/log"

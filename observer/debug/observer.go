@@ -3,9 +3,9 @@ package debug
 import (
 	"fmt"
 
-	"github.com/dpb587/boshdebugtracer/log"
-	"github.com/dpb587/boshdebugtracer/log/taskdebug"
-	"github.com/dpb587/boshdebugtracer/observer"
+	"github.com/dpb587/bosh-log-tracer/log"
+	"github.com/dpb587/bosh-log-tracer/log/taskdebug"
+	"github.com/dpb587/bosh-log-tracer/observer"
 )
 
 type Observer struct{}

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"regexp"
 
-	"github.com/dpb587/boshdebugtracer/log"
+	"github.com/dpb587/bosh-log-tracer/log"
 )
 
 var ExternalCPIRequestParser = externalCPIRequestParser{}

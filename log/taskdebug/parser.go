@@ -1,6 +1,6 @@
 package taskdebug
 
-import "github.com/dpb587/boshdebugtracer/log"
+import "github.com/dpb587/bosh-log-tracer/log"
 
 var Parser = []log.LineParser{
 	RawParser,

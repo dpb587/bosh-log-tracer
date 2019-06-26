@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dpb587/boshdebugtracer/log"
+	"github.com/dpb587/bosh-log-tracer/log"
 )
 
 var NATSMessageSentAgentParser = natsMessageSentAgentParser{}

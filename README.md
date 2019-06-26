@@ -1,4 +1,4 @@
-# boshdebugtracer
+# bosh-log-tracer
 
 To visualize what BOSH is busy doing during a task.
 
@@ -24,7 +24,7 @@ Run [Jaeger](https://www.jaegertracing.io/) (the tooling and UI) locally accordi
 
 Provide the debug log of a deploy task via `STDIN`...
 
-    bosh task --debug 1234 | go run ./cmd/boshtaskdebugjaeger
+    bosh task --debug 1234 | go run github.com/dpb587/bosh-log-tracer/cmd/taskdebugjaeger
 
 Open the URL it prints (something like http://localhost:16686/trace/1cfa67194cc4d8ef).
 
