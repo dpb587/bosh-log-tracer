@@ -3,15 +3,10 @@ package taskdebug
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/dpb587/bosh-log-tracer/log"
 )
-
-var InstanceAspectChangedParser = instanceAspectChangedParser{}
-
-type instanceAspectChangedParser struct{}
 
 type InstanceAspectChangedMessage struct {
 	RawMessage
@@ -23,6 +18,8 @@ type InstanceAspectChangedMessage struct {
 	ChangedFrom   string
 	ChangedTo     string
 }
+
+var _ log.Line = &InstanceAspectChangedMessage{}
 
 type packageChangeSet map[string]struct {
 	Name        string `json:"name"`
@@ -72,36 +69,4 @@ func (m InstanceAspectChangedMessage) GetChangedPackages() []string {
 	// TODO
 
 	return res
-}
-
-var _ log.Line = &InstanceAspectChangedMessage{}
-
-// stemcell_changed? changed FROM: version: 315.36 TO: version: 315.41 on instance concourse/6318b9e7-8c72-4c4e-8769-e59abaa32297 (0)
-var instanceAspectChangedOneRE = regexp.MustCompile(`^(.+)_changed\? changed FROM: (.+) TO: (.+) on instance ([^/]+)/([^ ]+) \((\d+)\)$`)
-
-func (p instanceAspectChangedParser) Parse(inU log.Line) (log.Line, error) {
-	in, ok := inU.(RawMessage)
-	if !ok {
-		return inU, nil
-	}
-
-	if in.Component != "DirectorJobRunner" {
-		return inU, nil
-	}
-
-	if m := instanceAspectChangedOneRE.FindStringSubmatch(in.Message); len(m) > 0 {
-		msg := InstanceAspectChangedMessage{
-			RawMessage:    in,
-			InstanceGroup: m[4],
-			InstanceID:    m[5],
-			InstanceIndex: m[6],
-			Aspect:        m[1],
-			ChangedFrom:   m[2],
-			ChangedTo:     m[3],
-		}
-
-		return msg, nil
-	}
-
-	return inU, nil
 }

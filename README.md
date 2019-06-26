@@ -2,9 +2,7 @@
 
 To visualize what BOSH is busy doing during a task.
 
-It's taking an after-the-fact approach at profiling by reading the debug logs and pretending it knows what BOSH was thinking while it happened. You probably shouldn't fully trust the accuracy of the results.
-
-alpha/experiment/buggy/use-at-your-own-risk
+It's taking an after-the-fact approach at profiling by reading logs and pretending it knows what BOSH was thinking while it happened. You probably shouldn't fully trust the accuracy of the results.
 
 
 ## Quick Start
@@ -27,6 +25,19 @@ Provide the debug log of a deploy task via `STDIN`...
     bosh task --debug 1234 | go run github.com/dpb587/bosh-log-tracer/cmd/taskdebugjaeger
 
 Open the URL it prints (something like http://localhost:16686/trace/1cfa67194cc4d8ef).
+
+
+## Caveats
+
+alpha/experiment/buggy/use-at-your-own-risk; also:
+
+ * alpha (pre-alpha?)
+ * experiment / proof of concept; worth pursuing more? get in touch
+ * currently only works with deploy tasks
+ * not tested with failed tasks
+ * not tested across diverse environments
+ * don't expect the code to easily make sense right now
+ * relevant log lines are included in traces and may include sensitive data
 
 
 ## Screenshot

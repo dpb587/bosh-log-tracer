@@ -1,8 +1,8 @@
-package taskdebug
+package parser
 
 import "github.com/dpb587/bosh-log-tracer/log"
 
-var Parser = []log.LineParser{
+var Parser = log.NewMultiParser(
 	RawParser,
 
 	ProcessParser,
@@ -17,4 +17,4 @@ var Parser = []log.LineParser{
 	ExternalCPIParser,
 
 	CPIAWSRPCParser,
-}
+)

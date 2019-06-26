@@ -5,15 +5,11 @@ import (
 	"os"
 
 	"github.com/dpb587/bosh-log-tracer/log"
-	"github.com/dpb587/bosh-log-tracer/log/taskdebug"
+	"github.com/dpb587/bosh-log-tracer/log/taskdebug/parser"
 	"github.com/dpb587/bosh-log-tracer/observer/debug"
 )
 
 func main() {
-	var err error
-
-	parsers := taskdebug.Parser
-
 	observer := debug.NewObserver()
 	observer.Begin()
 	defer observer.Commit()
@@ -31,14 +27,12 @@ func main() {
 			RawLineData:   scanner.Text(),
 		}
 
-		for _, p := range parsers {
-			l, err = p.Parse(l)
-			if err != nil {
-				panic(err)
-			}
+		l, err := parser.Parser.Parse(l)
+		if err != nil {
+			panic(err)
 		}
 
-		err := observer.Handle(l)
+		err = observer.Handle(l)
 		if err != nil {
 			panic(err)
 		}

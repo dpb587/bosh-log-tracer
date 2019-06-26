@@ -5,16 +5,13 @@ import (
 	"os"
 
 	"github.com/dpb587/bosh-log-tracer/log"
-	"github.com/dpb587/bosh-log-tracer/log/taskdebug"
 	"github.com/dpb587/bosh-log-tracer/log/taskdebug/jaeger"
+	"github.com/dpb587/bosh-log-tracer/log/taskdebug/parser"
 	"github.com/dpb587/bosh-log-tracer/observer/context"
 )
 
 func main() {
-	var err error
-
 	ctx := &context.Context{}
-	parsers := taskdebug.Parser
 
 	observer := jaeger.NewObserver(ctx, jaeger.ObserverOptions{
 		IncludeLogReferences: true,
@@ -35,14 +32,12 @@ func main() {
 			RawLineData:   scanner.Text(),
 		}
 
-		for _, p := range parsers {
-			l, err = p.Parse(l)
-			if err != nil {
-				panic(err)
-			}
+		l, err := parser.Parser.Parse(l)
+		if err != nil {
+			panic(err)
 		}
 
-		err := observer.Handle(l)
+		err = observer.Handle(l)
 		if err != nil {
 			panic(err)
 		}
